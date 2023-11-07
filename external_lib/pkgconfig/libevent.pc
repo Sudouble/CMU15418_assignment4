@@ -1,8 +1,8 @@
 #libevent pkg-config source file
 
-prefix=/afs/cs/academic/class/15418-s13/public
+prefix=/usr
 exec_prefix=${prefix}
-libdir=${exec_prefix}/lib
+libdir=${exec_prefix}/lib/x86_64-linux-gnu
 includedir=${prefix}/include
 
 Name: libevent

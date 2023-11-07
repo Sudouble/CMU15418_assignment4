@@ -1,10 +1,10 @@
-prefix=/afs/cs/academic/class/15418-s13/public
+prefix=/usr
 exec_prefix=${prefix}
-libdir=${exec_prefix}/lib
+libdir=${exec_prefix}/lib/x86_64-linux-gnu
 includedir=${prefix}/include
 
 Name: gflags
-Version: 2.0
+Version: 2.2
 Description: A commandline flags library that allows for distributed flags
 URL: http://code.google.com/p/gflags
 Requires:
