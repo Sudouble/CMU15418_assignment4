@@ -43,6 +43,8 @@ void execute_work(const Request_msg& req, Response_msg& resp);
  */
 void worker_node_init(const Request_msg& params);
 
+void worker_node_uninit(const Request_msg& params);
+
 
 /**
  * @brief Handle incoming request from master

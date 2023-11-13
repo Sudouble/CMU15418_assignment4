@@ -4,7 +4,7 @@
 
 #include "server/messages.h"
 #include "server/master.h"
-
+#include <map>
 
 static struct Master_state {
 
@@ -19,7 +19,7 @@ static struct Master_state {
   int next_tag;
 
   Worker_handle my_worker;
-  Client_handle waiting_client;
+  std::map<int, Client_handle> waiting_client;
 
 } mstate;
 
@@ -73,15 +73,14 @@ void handle_worker_response(Worker_handle worker_handle, const Response_msg& res
 
   DLOG(INFO) << "Master received a response from a worker: [" << resp.get_tag() << ":" << resp.get_response() << "]" << std::endl;
 
-  send_client_response(mstate.waiting_client, resp);
+  DLOG(INFO) << "client_handle: " << mstate.waiting_client[resp.get_tag()] << "[" << resp.get_tag() << ":" << resp.get_response() << "]" << "\n";
 
-  mstate.num_pending_client_requests = 0;
+  send_client_response(mstate.waiting_client[resp.get_tag()], resp);
+
+  mstate.num_pending_client_requests--;
 }
 
 void handle_client_request(Client_handle client_handle, const Request_msg& client_req) {
-
-  DLOG(INFO) << "Received request: " << client_req.get_request_string() << std::endl;
-
   // You can assume that traces end with this special message.  It
   // exists because it might be useful for debugging to dump
   // information about the entire run here: statistics, etc.
@@ -92,26 +91,30 @@ void handle_client_request(Client_handle client_handle, const Request_msg& clien
     return;
   }
 
-  // The provided starter code cannot handle multiple pending client
-  // requests.  The server returns an error message, and the checker
-  // will mark the response as "incorrect"
-  if (mstate.num_pending_client_requests > 0) {
-    Response_msg resp(0);
-    resp.set_response("Oh no! This server cannot handle multiple outstanding requests!");
-    send_client_response(client_handle, resp);
-    return;
-  }
+  // // The provided starter code cannot handle multiple pending client
+  // // requests.  The server returns an error message, and the checker
+  // // will mark the response as "incorrect"
+  // if (mstate.num_pending_client_requests > 0) {
+  //   Response_msg resp(0);
+  //   resp.set_response("Oh no! This server cannot handle multiple outstanding requests!");
+  //   send_client_response(client_handle, resp);
+  //   return;
+  // }
 
   // Save off the handle to the client that is expecting a response.
   // The master needs to do this it can response to this client later
   // when 'handle_worker_response' is called.
-  mstate.waiting_client = client_handle;
+
   mstate.num_pending_client_requests++;
 
   // Fire off the request to the worker.  Eventually the worker will
   // respond, and your 'handle_worker_response' event handler will be
   // called to forward the worker's response back to the server.
   int tag = mstate.next_tag++;
+
+  mstate.waiting_client[tag] = client_handle;
+  DLOG(INFO) << "client_handle: " << client_handle << "tag: " << tag << ", "<< client_req.get_request_string() << "\n";
+
   Request_msg worker_req(tag, client_req);
   send_request_to_worker(mstate.my_worker, worker_req);
 

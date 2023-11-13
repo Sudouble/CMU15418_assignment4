@@ -160,5 +160,7 @@ int main(int argc, char** argv) {
 
   harness_begin_main_loop();
 
+  worker_node_uninit(boot_req);
+
   return 0;
 }

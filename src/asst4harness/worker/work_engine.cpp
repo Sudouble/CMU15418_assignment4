@@ -97,6 +97,8 @@ void count_primes_job(const Request_msg& req, Response_msg& resp) {
     }
   }
 
+  // DLOG(INFO) << "For input:" << N << ", result: " << count << "\n";
+
   char tmp_buffer[32];
   sprintf(tmp_buffer, "%d", count);
   resp.set_response(tmp_buffer);

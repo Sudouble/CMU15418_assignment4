@@ -20,7 +20,7 @@ signal.signal(signal.SIGCHLD, signal.SIG_IGN)
 def positive_int(value):
   ivalue = int(value)
   if ivalue <= 0:
-      raise argparse.ArgumentTypeError("%s is not a positive int value" % value)
+    raise argparse.ArgumentTypeError("%s is not a positive int value" % value)
   return ivalue
 
 parser = argparse.ArgumentParser(description="Launch workers")
@@ -133,9 +133,9 @@ def launch_remote_worker(addr, wr):
 
     remote_host = reserve_remote_host()
     if remote_host is None:
-	if args.verbose:
-	    print "No remote available!"
-        return
+      if args.verbose:
+        print "No remote available!"
+      return
 
     # command = "ssh -o StrictHostKeyChecking=no %s '%s'" % (remote_host, local_command(addr, wr))
     local_cmd = local_command(addr, wr)
@@ -168,41 +168,41 @@ class WorkerHandler(threading.Thread):
         self.launch_worker(self.addr, self.worker_args)
 
 class ConnectionHandler(threading.Thread):
-    def __init__(self, sock, addr, launch_worker):
-        threading.Thread.__init__(self)
-        self.sock = sock
-        self.launch_worker = launch_worker
+  def __init__(self, sock, addr, launch_worker):
+    threading.Thread.__init__(self)
+    self.sock = sock
+    self.launch_worker = launch_worker
 
-    def run(self):
-        addr = comm.recv_string(self.sock)
-        if args.verbose:
-            print "Master is listening on %s" % addr
+  def run(self):
+    addr = comm.recv_string(self.sock)
+    if args.verbose:
+        print "Master is listening on %s" % addr
 
-        threads = []
+    threads = []
+    worker_args = comm.recv_string(self.sock)
+    while worker_args:
+      t = WorkerHandler(self.launch_worker, addr, worker_args)
+      threads.append(t)
+      t.start()
+      try:
         worker_args = comm.recv_string(self.sock)
-        while worker_args:
-	    t = WorkerHandler(self.launch_worker, addr, worker_args)
-	    threads.append(t)
-	    t.start()
-	    try:
-	      worker_args = comm.recv_string(self.sock)
-	    except comm.SocketClosed:
-	      if args.verbose:
-	         print "Connection closed with %s" % addr
-	      break;
-
-	for t in threads:
-	    t.join()
-
+      except comm.SocketClosed:
         if args.verbose:
-            print "Connection from %s closed" % addr
-        self.sock.close()
+            print "Connection closed with %s" % addr
+        break;
+
+    for t in threads:
+      t.join()
+
+    if args.verbose:
+      print "Connection from %s closed" % addr
+    self.sock.close()
 
 while True:
-        conn, addr = s.accept()
-        if args.verbose:
-               print "Connection from", addr
-	launch = launch_local_worker
-	if launch_on_remote_hosts:
-	      launch = launch_remote_worker
-        ConnectionHandler(conn, addr, launch).start()
+  conn, addr = s.accept()
+  if args.verbose:
+    print "Connection from", addr
+  launch = launch_local_worker
+  if launch_on_remote_hosts:
+    launch = launch_remote_worker
+  ConnectionHandler(conn, addr, launch).start()
